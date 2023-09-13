@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <form
+      method="POST"
+      action="upload.php"
+      id="imagenForm"
+      enctype="multipart/form-data">
+      <div id="root">
+        <p>Upload an image and see the result</p>
+        <input
+          type="file"
+          name="image"
+          id="img_input"
+          accept="image/*"
+          style="display: block" />
+      </div>
+      <button type="submit">Enviar</button>
+    </form>
+
+    <script>
+      const MIME_TYPE = "image/jpeg";
+      const QUALITY = 0.5;
+
+      // Definir el porcentaje de compresión deseado (por ejemplo, 50%)
+      const COMPRESSION_PERCENTAGE = 0.5;
+      const input = document.getElementById("img_input");
+      input.onchange = function (ev) {
+        const file = ev.target.files[0]; // obtener el archivo
+        const blobURL = URL.createObjectURL(file);
+        const img = new Image();
+        img.src = blobURL;
+        img.onerror = function () {
+          URL.revokeObjectURL(this.src);
+          // Manejar el error adecuadamente
+          console.log("No se puede cargar la imagen");
+        };
+        img.onload = function () {
+          URL.revokeObjectURL(this.src);
+
+          // Calcular automáticamente el nuevo ancho y alto basado en el porcentaje de compresión
+          const newWidth = img.width * COMPRESSION_PERCENTAGE;
+          const newHeight = img.height * COMPRESSION_PERCENTAGE;
+
+          const canvas = document.createElement("canvas");
+          canvas.width = newWidth;
+          canvas.height = newHeight;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, newWidth, newHeight);
+          canvas.toBlob(
+            (blob) => {
+              // Handle the compressed image.
+              displayInfo("Original file", file);
+              displayInfo("Compressed file", blob);
+
+              // Enviar la imagen comprimida al servidor (por ejemplo, a través de una solicitud AJAX).
+              const formData = new FormData();
+              formData.append("compressedImage", blob, "compressed_image.jpg");
+
+              fetch("upload.php", {
+                method: "POST",
+                body: formData,
+              })
+                .then((response) => response.text())
+                .then((data) => {
+                  console.log(data); // Puedes mostrar la respuesta del servidor en la consola.
+                })
+                .catch((error) => {
+                  console.error(
+                    "Error al enviar la imagen al servidor:",
+                    error
+                  );
+                });
+            },
+            MIME_TYPE,
+            QUALITY
+          );
+          document.getElementById("root").append(canvas);
+        };
+      };
+
+      // Utility functions for demo purpose
+
+      function displayInfo(label, file) {
+        const p = document.createElement("p");
+        p.innerText = `${label} - ${readableBytes(file.size)}`;
+        document.getElementById("root").append(p);
+      }
+
+      function readableBytes(bytes) {
+        const i = Math.floor(Math.log(bytes) / Math.log(1024)),
+          sizes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+        return (bytes / Math.pow(1024, i)).toFixed(2) + " " + sizes[i];
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,42 @@
+img {
+  height: 250px;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  position: relative;
+}
+.image-preview-container {
+  position: relative;
+  display: inline-block;
+  margin: 10px;
+}
+
+.image-preview-container img {
+  max-width: 100%;
+}
+
+.delete-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+
+  width: 2rem;
+  height: 2rem;
+
+  background: gray;
+  border-radius: 50%;
+  top: 10px;
+  right: 4px;
+  position: absolute;
+
+  font-size: 22px;
+  color: white;
+}
+.delete-icon:hover {
+  cursor: pointer;
+  opacity: 0.8;
+}
+.container {
+  background: #f2f1f0;
+}

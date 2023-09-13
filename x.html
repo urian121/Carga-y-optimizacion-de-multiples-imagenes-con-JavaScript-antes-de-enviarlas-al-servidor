@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <form
+      method="POST"
+      action="upload.php"
+      id="imagenForm"
+      enctype="multipart/form-data">
+      <div id="root">
+        <p>Upload an image and see the result</p>
+        <input
+          type="file"
+          name="image"
+          id="img_input"
+          accept="image/*"
+          style="display: block" />
+      </div>
+      <button type="button" id="btnEnviar">Enviar</button>
+    </form>
+
+    <script>
+      const MAX_WIDTH = 800;
+      const MAX_HEIGHT = 600;
+      const MIME_TYPE = "image/jpeg";
+      const QUALITY = 0.7;
+
+      document.getElementById("btnEnviar").addEventListener("click", () => {
+        const input = document.getElementById("img_input");
+        const file = input.files[0]; // obtener el archivo
+
+        if (!file) {
+          console.log("No se ha seleccionado un archivo.");
+          return;
+        }
+
+        const blobURL = URL.createObjectURL(file);
+        const img = new Image();
+        img.src = blobURL;
+        img.onerror = function () {
+          URL.revokeObjectURL(this.src);
+          // Manejar el error adecuadamente
+          console.log("No se puede cargar la imagen");
+        };
+        img.onload = function () {
+          URL.revokeObjectURL(this.src);
+          const [newWidth, newHeight] = calculateSize(
+            img,
+            MAX_WIDTH,
+            MAX_HEIGHT
+          );
+          const canvas = document.createElement("canvas");
+          canvas.width = newWidth;
+          canvas.height = newHeight;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, newWidth, newHeight);
+          canvas.toBlob(
+            (blob) => {
+              // Handle the compressed image.
+              displayInfo("Original file", file);
+              displayInfo("Compressed file", blob);
+
+              // Enviar la imagen comprimida al servidor (por ejemplo, a través de una solicitud AJAX).
+              const formData = new FormData();
+              formData.append("compressedImage", blob, "compressed_image.jpg");
+
+              fetch("upload.php", {
+                method: "POST",
+                body: formData,
+              })
+                .then((response) => response.text())
+                .then((data) => {
+                  console.log(data); // Puedes mostrar la respuesta del servidor en la consola.
+                })
+                .catch((error) => {
+                  console.error(
+                    "Error al enviar la imagen al servidor:",
+                    error
+                  );
+                });
+            },
+            MIME_TYPE,
+            QUALITY
+          );
+          document.getElementById("root").append(canvas);
+        };
+      });
+
+      function calculateSize(img, maxWidth, maxHeight) {
+        let width = img.width;
+        let height = img.height;
+
+        // calculate the width and height, constraining the proportions
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        return [width, height];
+      }
+
+      // Utility functions for demo purpose
+
+      function displayInfo(label, file) {
+        const p = document.createElement("p");
+        p.innerText = `${label} - ${readableBytes(file.size)}`;
+        document.getElementById("root").append(p);
+      }
+
+      function readableBytes(bytes) {
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        const sizes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+        return (bytes / Math.pow(1024, i)).toFixed(2) + " " + sizes[i];
+      }
+    </script>
+  </body>
+</html>
