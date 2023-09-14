@@ -61,10 +61,17 @@ function updateImageCounter() {
 }
 
 document.getElementById("btnEnviar").addEventListener("click", () => {
-  const MAX_WIDTH = 1000;
-  const MAX_HEIGHT = 800;
+  const MAX_WIDTH = 800;
+  const MAX_HEIGHT = "auto";
+  /*
+    const MAX_WIDTH = "1200";
+    const MAX_HEIGHT = "800";
+
+    const MAX_WIDTH = "auto";
+    const MAX_HEIGHT = "auto";
+  */
   const MIME_TYPE = "image/jpeg";
-  const QUALITY = 0.5;
+  const QUALITY = 0.7;
 
   // Obtener las imágenes en el conjunto uploadedImages y enviarlas al servidor
   const imagesToSend = Array.from(uploadedImages);
